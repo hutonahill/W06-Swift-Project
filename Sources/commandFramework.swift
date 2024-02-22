@@ -1,7 +1,7 @@
 
 
 class Command{
-    private let CommandDebugMode: Bool = true
+    private let CommandDebugMode: Bool = false
     internal private(set) var registeredParameters: [String: Parameter] = [:]
     public internal(set) var Name: String 
     public internal(set) var description:String

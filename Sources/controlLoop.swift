@@ -81,7 +81,12 @@ class CommandLoop {
                     end()
                 }
                 else if (helpInputs.contains(commandName)){
+                    Debug("main: Debug 1.3: help detcted.")
                     Help()
+                }
+                else if(commandHelpInputs.contains(commandName)){
+                    Debug("main: Debug 1.4: command help detected.")
+                    CommandHelp()
                 }
                 else if CommandRegistry.keys.contains(commandName){
                     if let targetCommand: Command = CommandRegistry[commandName]{
