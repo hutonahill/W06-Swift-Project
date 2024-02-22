@@ -3,13 +3,17 @@
 class CommandLoop {
     private var running: Bool = true;
 
-    private var CommandList: [any Command]
+    private var CommandList: [Command]
     
     private let DebugMode: Bool = false
+    
+    private let DevMode: Bool = false
+    private let fundimentalFlag: String = "[FUNDIMENTAL] "
+    private let secondaryFlag: String = "[USER_ADDED] "
+ 
+    private var CommandRegistry: [String : Command] = [:]
 
-    private var CommandRegistry: [String : any Command] = [:]
-
-    init(CommandListInput: [any Command]){
+    init(CommandListInput: [Command]){
         CommandList = CommandListInput
 
         CommandRegistry = CompileCommands()
@@ -80,7 +84,7 @@ class CommandLoop {
                     Help()
                 }
                 else if CommandRegistry.keys.contains(commandName){
-                    if let targetCommand: any Command = CommandRegistry[commandName]{
+                    if let targetCommand: Command = CommandRegistry[commandName]{
                         // run the command
                         targetCommand.run(parameters: ParameterList)
                         
@@ -103,7 +107,7 @@ class CommandLoop {
     private func CompileCommands() -> [String : Command]{
         var output: [String : Command] = [:]
         
-        for method: any Command in CommandList {
+        for method: Command in CommandList {
             for validInput: String in method.validInputs{
 
                 guard !output.keys.contains(validInput) else{
@@ -153,14 +157,19 @@ class CommandLoop {
             "\n" +
             "That should be every thing you need to know to use this command system!"
         )
+        print(output)
     }
     
     private func Help(){
         var output: String = ""
         
+        
         // I am itching to create a better system for fundimental commands, but i dont have time.
         
         // print info about help.
+        if(DevMode == true){
+            output += fundimentalFlag
+        }
         output += "Help\n"
         output += "\tDescription: Prints this help page\n"
         output += "\tValid Inputs: "
@@ -173,6 +182,9 @@ class CommandLoop {
         output += "\tCommand Does Not Have Flags\n\n"
         
         // print info about exit
+        if(DevMode == true){
+            output += fundimentalFlag
+        }
         output += "Exit\n"
         output += "\tDescription: Closes the progam\n"
         output += "\tValid Inputs: "
@@ -185,6 +197,9 @@ class CommandLoop {
         output += "\tCommand Does Not Have Flags\n\n"
         
         // print info about commandhelp
+        if(DevMode == true){
+            output += fundimentalFlag
+        }
         output += "Command Help\n"
         output += "\tDescription: Prints a help page explaning how to use the command system\n"
         output += "\tValid Inputs: "
@@ -199,13 +214,16 @@ class CommandLoop {
         print(output)
         
         // print info about all other commands.
-        for command: any Command in self.CommandList{
+        for command: Command in self.CommandList{
             print(getCommandData(command))
         }
     }
     
-    private func getCommandData(_ cmd: any Command) -> String{
+    private func getCommandData(_ cmd: Command) -> String{
         var output: String = "";
+        if (DevMode == true){
+            output += secondaryFlag
+        }
         output += cmd.Name + "\n"
         output += "\tDescription: " + cmd.description + "\n"
         output += "\tValid Inputs: "
@@ -218,7 +236,7 @@ class CommandLoop {
         
         if (cmd.hasParameters == true){
             output += "\tCommand Has Flags\n"
-            for flag: any Parameter in cmd.activeParameters{
+            for flag: Parameter in cmd.activeParameters{
                 output += GetFlagData(flag)
             }
         }
@@ -229,11 +247,11 @@ class CommandLoop {
         return output
     }
     
-    private func GetFlagData(_ flag: any Parameter, tabLevel: Int = 1) -> String{
+    private func GetFlagData(_ flag: Parameter, tabLevel: Int = 1) -> String{
         var output: String = ""
         
         var tabValue = ""
-        for _index: Int in 0..<tabLevel {
+        for _: Int in 0..<tabLevel {
             tabValue += "\t"
         }
         

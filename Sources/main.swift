@@ -9,10 +9,11 @@ public let valueKey: String = "values"
 
 private var currentBoard: Board = Board();
 
-var CommandList: [any Command] = [
+var CommandList: [Command] = [
     HowTo(),
     Move(),
-    Display()
+    Display(),
+    StartNewGame()
 ]
 
 let DebugMode: Bool = false
@@ -22,45 +23,50 @@ let DebugMode: Bool = false
 
 final class Move : Command{
 
-    let Name: String = "Move"
-    let validInputs: [String] = ["move"]
-    let activeParameters:[any Parameter] = [XPos(), YPos()]
-    var registeredParameters: [String : any Parameter] = [:]
-    let hasParameters:Bool = true
-    let minNumParameters: Int = 0
-    let maxNumParameters: Int = 2
+    override init(){
+        super.init()
+        Name = "Move"
+        description = "Executes a move for the current Player then displays the board."
+        validInputs = ["move"]
+        activeParameters = [XPos(), YPos()]
+        hasParameters = true
+        minNumParameters = 0
+        maxNumParameters = 2
+        
+        compileParameters()
+    }
     
-//    init(){
-//        super.init()
-//    }
-    
-    func runCommand(parameters: [String : [String]]) {
+    override func runCommand(parameters: [String : [String]]) {
         
         var gotRow: Bool = false
         var row: Int = 0
         var gotCol: Bool = false
         var col: Int = 0
-
+        
+        Debug("Move: Debug 0.1: parameters.count == \(parameters.count)")
+        
         for key: String in parameters.keys{
-            if let currentParamClass = registeredParameters[key]! as? any Parameter {
+            if let currentParamClass = registeredParameters[key] {
                 
-                if (currentParamClass.Name == activeParameters[0].Name && currentParamClass.validFlags == activeParameters[0].validFlags){
+                Debug("Move: Debug 0.2: currentParamClass.Name == \(currentParamClass.Name)")
+                
+                if (currentParamClass == activeParameters[0]){
                     guard let rowTemp: Int = Int(parameters[key]![0]) else{
                         print("Parameter `\(currentParamClass.Name)` for command `\(Name)` called with flag `\(key)` " + 
                         "expected an Int value but received `\(String(describing: parameters[key]?[0]))`")
                         return
                     }
-                    row = rowTemp
+                    row = rowTemp - 1
                     gotRow = true;
                 }
                 
-                else if (currentParamClass.Name == activeParameters[1].Name && currentParamClass.validFlags == activeParameters[1].validFlags){
+                else if (currentParamClass == activeParameters[1]){
                     guard let colTemp: Int = Int(parameters[key]![0]) else{
                         print("Parameter `\(currentParamClass.Name)` for command `\(Name)` called with flag `\(key)` " + 
                         "expected an Int value but received `\(String(describing: parameters[key]?[0]))`")
                         return
                     }
-                    col = colTemp
+                    col = colTemp - 1
                     gotCol = true;
                 }
             } else {
@@ -157,43 +163,56 @@ final class Move : Command{
         }
 
         if (gameOver == true){
-            print("Game Over!")
+            print("Game Over! Start a new game with the `start` command!")
         }
     }
-
-    let description: String = "Executes a move for the current Player then displays the board."
 }
 
 final class XPos : Parameter{
-    let Name: String = "X Position"
-    let validFlags: [String] = ["-x", "x", "letter", "-letter", "l", "-l", "row", "-row", "r", "-r"]
-    let hasValues: Bool = true
-    let maxNumValues: Int = 1;
-    let minNumValues: Int = 1;
-    let description: String = "Allows the user to set the x position (also known as letter or row) of the move in the move function"
+    
+    override init(){
+        super.init()
+        Name = "X Position"
+        validFlags = ["-x", "x", "letter", "-letter", "l", "-l", "row", "-row", "r", "-r"]
+        hasValues = true
+        maxNumValues = 1;
+        minNumValues = 1;
+        description = "Allows the user to set the x position (also known as letter or row) of the move in the move function"
+    }
 }
 
 final class YPos : Parameter{
-    let Name: String = "Y Position"
-    let validFlags: [String] = ["-y", "y", "num", "-num", "n", "-n", "column", "-column", "col", "-col", "c", "-c"]
-    let hasValues: Bool = true
-    let maxNumValues: Int = 1;
-    let minNumValues: Int = 1;
-    let description: String = "Allows the user to set the y position (also know as column) of the move in the move function"
+    
+    override init(){
+        super.init()
+        Name = "Y Position"
+        validFlags = ["-y", "y", "num", "-num", "n", "-n", "column", "-column", "col", "-col", "c", "-c"]
+        hasValues = true
+        maxNumValues = 1;
+        minNumValues = 1;
+        description = "Allows the user to set the y position (also know as column) of the move in the move function"
+    }
 }
 
 // === How To ===
 
 final class HowTo : Command {
-    let Name: String = "How To"
-    let validInputs: [String] = ["howto", "how", "tutorial", "tut"]
-    let description:String = "Prints a guid explaining how to play the game."
-    let activeParameters:[any Parameter] = []
-    var registeredParameters: [String:any Parameter] = [:]
-    let hasParameters:Bool = false
-    let minNumParameters: Int = 0
-    let maxNumParameters: Int = 0
-    func runCommand(parameters: [String : [String]]){
+    
+    
+    override init(){
+        super.init()
+        Name = "How To"
+        validInputs = ["howto", "how", "tutorial", "tut"]
+        description = "Prints a guid explaining how to play the game."
+        activeParameters = []
+        hasParameters = false
+        minNumParameters = 0
+        maxNumParameters = 0
+        
+        compileParameters()
+    }
+    
+    override func runCommand(parameters: [String : [String]]){
         print("Welcome to Tic Tac Toe!\n" +
 
             "This is a game of trying to match 3 in a row.\n\n" + 
@@ -218,15 +237,22 @@ final class HowTo : Command {
 // === Display ===
 final class Display : Command{
     
-    let Name: String = "Display"
-    let validInputs: [String] = ["display", "show"]
-    let description: String = "shows the current state of the board";
-    let activeParameters: [any Parameter] = []
-    var registeredParameters: [String : any Parameter] = [:]
-    let hasParameters: Bool = false
-    let minNumParameters: Int = 0
-    let maxNumParameters: Int = 0
-    func runCommand(parameters: [String : [String]]) {
+    
+    
+    override init(){
+        super.init()
+        Name = "Display"
+        validInputs = ["display", "show"]
+        description = "shows the current state of the board";
+        activeParameters = []
+        hasParameters = false
+        minNumParameters = 0
+        maxNumParameters = 0
+        
+        compileParameters()
+    }
+    
+    override func runCommand(parameters: [String : [String]]) {
         print("\nit is \(currentBoard.GetCurrentPlayerSymbol())'s turn")
         print(currentBoard.display())
     }
@@ -235,15 +261,20 @@ final class Display : Command{
 // === Start New Game
 final class StartNewGame : Command{
     
-    let Name: String = "Start New Game"
-    let validInputs: [String] = ["start", "newgame", "startnewgame", "begin"]
-    let description: String = "Starts a new game"
-    let activeParameters: [any Parameter] = []
-    var registeredParameters: [String : any Parameter] = [:]
-    let hasParameters: Bool = false;
-    let minNumParameters: Int = 0
-    let maxNumParameters: Int = 0;
-    func runCommand(parameters: [String : [String]]) {
+    override init(){
+        super.init()
+        Name = "Start New Game"
+        validInputs = ["start", "newgame", "startnewgame", "begin"]
+        description = "Starts a new game"
+        activeParameters = []
+        hasParameters = false;
+        minNumParameters = 0
+        maxNumParameters = 0;
+        
+        compileParameters()
+    }
+    
+    override func runCommand(parameters: [String : [String]]) {
         if(currentBoard.getIsGameOver() == true){
             currentBoard = Board()
         }
@@ -254,7 +285,7 @@ final class StartNewGame : Command{
             
             while (validInput == false){
                 print("Are you sure you want ot start a new game? (y/n): ", terminator: "")
-                var rawUserInput: String = readLine()!.lowercased()
+                let rawUserInput: String = readLine()!.lowercased()
                 
                 switch rawUserInput{
                     case "y", "yes", "continue":
