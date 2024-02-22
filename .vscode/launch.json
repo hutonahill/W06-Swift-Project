@@ -1,0 +1,28 @@
+{
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "sourceLanguages": [
+                "swift"
+            ],
+            "args": [],
+            "cwd": "${workspaceFolder:W06 Project}",
+            "name": "Debug W06_Project",
+            "program": "${workspaceFolder:W06 Project}\\.build\\debug\\W06_Project.exe",
+            "preLaunchTask": "swift: Build Debug W06_Project"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "sourceLanguages": [
+                "swift"
+            ],
+            "args": [],
+            "cwd": "${workspaceFolder:W06 Project}",
+            "name": "Release W06_Project",
+            "program": "${workspaceFolder:W06 Project}\\.build\\release\\W06_Project.exe",
+            "preLaunchTask": "swift: Build Release W06_Project"
+        }
+    ]
+}
