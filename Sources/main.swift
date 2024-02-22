@@ -1,8 +1,6 @@
 // The Swift Programming Language
-// https://docs.swift.org/swift-book
 
-import Foundation 
-import WinSDK
+import Foundation
 
 
 public let parameterKey: String = "parameter"
@@ -12,15 +10,12 @@ public let valueKey: String = "values"
 private var currentBoard: Board = Board();
 
 var CommandList: [any Command] = [
-    Help(),
+    HowTo(),
     Move(),
-    HowTo()
+    Display()
 ]
 
-
-// compile commands into a registry.
-
-
+let DebugMode: Bool = false
 
 
 // === Move ====
@@ -34,7 +29,11 @@ final class Move : Command{
     let hasParameters:Bool = true
     let minNumParameters: Int = 0
     let maxNumParameters: Int = 2
-
+    
+//    init(){
+//        super.init()
+//    }
+    
     func runCommand(parameters: [String : [String]]) {
         
         var gotRow: Bool = false
@@ -70,45 +69,78 @@ final class Move : Command{
         }
 
         let currentPlayerSymbol: String = String(currentBoard.GetCurrentPlayerSymbol())
-
+        
+        
         if(gotRow != true){
+            Debug("Move: Debug 1: Getting row")
             var validInput: Bool = false
             while (validInput == false){
-                print("Enter the row you would like to play in: ")
-                let tempRow: Int = convertInput(readLine() ?? "-1", to: Int.self) ?? -1;
+                print("Enter the row you would like to play in: \(currentPlayerSymbol)>", terminator: "")
+                let rawUserInput = readLine()
+                Debug("Move: Debug 1.1: rawUserInput == `\(String(describing: rawUserInput))`")
+                var tempRow: Int
+                if let convertedInput = Int(rawUserInput!){
+                    tempRow = convertedInput
+                }
+                else{
+                    tempRow = -1
+                }
+                
+                Debug("Move: Debug 1.2: tempRow == \(tempRow)")
                 
                 if (tempRow == 1 || tempRow == 2 || tempRow == 3){
                     validInput = true
-                    row = tempRow
+                    row = tempRow - 1
                 }
                 else{
                     print("Please input 1, 2 or 3.")
                 }
+                
+                Debug("Move: Debug 1.3: row == \(row)")
             }
             
         }
 
         if(gotCol != true){
+            Debug("Move: Debug 2: Getting Col")
             var validInput: Bool = false
             while (validInput == false){
-                print("Enter the column you would like to play in: ")
-                let tempCol: Character = convertInput(readLine() ?? " ", to: Character.self) ?? " "
+                print("Enter the column you would like to play in: \(currentPlayerSymbol)>", terminator: "")
+                
+                let rawUserInput = readLine()
+                Debug("Move: Debug 2.1: rawUserInput == `\(String(describing: rawUserInput))`")
+                
+                let tempCol: Character
+                
+                if rawUserInput!.count == 1{
+                    tempCol = rawUserInput!.first!
+                }
+                else{
+                    tempCol = "f"
+                }
+                
+                Debug("Move: Debug 2.2: tempCol == \(tempCol)")
                 
                 validInput = true
                 switch tempCol.lowercased() {
                 case "1", "a":
-                    col = 1
+                    col = 0
                 case "2", "b":
-                    col = 2
+                    col = 1
                 case "3", "c":
-                    col = 3
+                    col = 2
                 default:
                     print("Please input a, b, or c.")
                     validInput = false
                 }
+                
+                Debug("Move: Debug 2.3: col == \(col)")
             }
             
         }
+        
+        Debug("Move: Debut 3: making the move")
+        Debug("Move: Debug 3.1: row == \(row), col == \(col)")
 
         var success: Bool
         var gameOver: Bool
@@ -119,6 +151,9 @@ final class Move : Command{
 
         if (success == true){
             print("Success! it is now Player `\(currentBoard.GetCurrentPlayerSymbol())`'s turn")
+        }
+        else{
+            print("Move Failed. It is still Player \(currentBoard.GetCurrentPlayerSymbol())'s turn")
         }
 
         if (gameOver == true){
@@ -180,38 +215,68 @@ final class HowTo : Command {
     
 }
 
-// === Help ===
-
-final class Help : Command {
-    let Name: String = "Help"
-    let validInputs: [String] = ["help", "-h", "-help","--help"]
-    let description: String = "Prints out a description of every function"
-    let activeParameters: [any Parameter] = [ByFunction()]
+// === Display ===
+final class Display : Command{
+    
+    let Name: String = "Display"
+    let validInputs: [String] = ["display", "show"]
+    let description: String = "shows the current state of the board";
+    let activeParameters: [any Parameter] = []
     var registeredParameters: [String : any Parameter] = [:]
-    let hasParameters: Bool = true
+    let hasParameters: Bool = false
     let minNumParameters: Int = 0
-    let maxNumParameters: Int = 1
+    let maxNumParameters: Int = 0
     func runCommand(parameters: [String : [String]]) {
-        
+        print("\nit is \(currentBoard.GetCurrentPlayerSymbol())'s turn")
+        print(currentBoard.display())
     }
 }
 
-final class ByFunction : Parameter {
-    let Name: String = "By Function"
-    let validFlags: [String] = ["-f", "f", "function", "-function"]
-    let hasValues: Bool = false;
-    let maxNumValues: Int = 0
-    let minNumValues: Int = -1;
-    let description: String = "Allows the user to print the help page for a specific function."
+// === Start New Game
+final class StartNewGame : Command{
+    
+    let Name: String = "Start New Game"
+    let validInputs: [String] = ["start", "newgame", "startnewgame", "begin"]
+    let description: String = "Starts a new game"
+    let activeParameters: [any Parameter] = []
+    var registeredParameters: [String : any Parameter] = [:]
+    let hasParameters: Bool = false;
+    let minNumParameters: Int = 0
+    let maxNumParameters: Int = 0;
+    func runCommand(parameters: [String : [String]]) {
+        if(currentBoard.getIsGameOver() == true){
+            currentBoard = Board()
+        }
+        else{
+            print("The current game is not over.")
+            
+            var validInput: Bool = false
+            
+            while (validInput == false){
+                print("Are you sure you want ot start a new game? (y/n): ", terminator: "")
+                var rawUserInput: String = readLine()!.lowercased()
+                
+                switch rawUserInput{
+                    case "y", "yes", "continue":
+                        currentBoard = Board()
+                        validInput = true
+                    case "n", "no":
+                        validInput = true
+                    default:
+                        print("Invalid Input. Please Input `y` or `n`")
+                }
+            }
+            
+            
+        }
+    }
 }
+
 
 func convertInput<T>(_ input: String, to type: T.Type) -> T? {
     return input as? T
 }
 
-func sleepForSeconds(_ seconds: Double) {
-    Sleep(DWORD(seconds * 1000)) // Convert seconds to milliseconds
-}
 
 // for parsing the elements of a command from its string.
 
@@ -246,7 +311,7 @@ private func parseCommand(_ input: String) -> [String: Any] {
     // Split the input string into components using space as the delimiter
     var components: [String] = input.components(separatedBy: " ")
 
-    print("Debug 0: components.count == \(components.count)")
+    Debug("Debug 0: components.count == \(components.count)")
 
     // Extract command (the first component)
     guard let command: String = components.first else{
@@ -262,21 +327,21 @@ private func parseCommand(_ input: String) -> [String: Any] {
         //print("Debug 1: component==\(component)")
 
         // Check if the component contains '(' and ')', indicating it has values
-        print("Debut 1.1 components == \(arrayToString(components))")
-        print("Debug 1.2: component = \(component)")
+        Debug("Debut 1.1 components == \(arrayToString(components))")
+        Debug("Debug 1.2: component = \(component)")
         if component.contains("(") {
 
             // Step 1 is to find the matching closing parentheses.
             // We do this by looping through the next elements in 
             // the list of components and adding them to the current 
             // component until we add one that contains ')'.
-            //print("Debug 2")
+            Debug("Debug 2")
             var i : Int = 0
             while !component.contains(")") {
                 // i will also be used to rem>voe all components that we combined
                 // when we are done parsing this peram. 
                 i += 1
-                //print("\tDebug 3[\(i)]")
+                Debug("\tDebug 3[\(i)]")
 
                 // if we got to the end fo the command before we find the close, throw an error.
                 guard i < components.count else {
@@ -284,7 +349,7 @@ private func parseCommand(_ input: String) -> [String: Any] {
                     return ["error": "Mismatched parentheses"]
                 }
                 component += " " + components[i]
-                print("\tDebug 3.1[\(i)]: component = \(component)")
+                Debug("\tDebug 3.1[\(i)]: component = \(component)")
             }
 
             guard component.last == ")" else{
@@ -330,6 +395,12 @@ private func parseCommand(_ input: String) -> [String: Any] {
 
     // Assign the parameters array to the "parameters" key in the result dictionary
     return [command : parameters]
+}
+
+private func Debug(_ msg: String){
+    if (DebugMode == true){
+        print("\t" + msg.replacingOccurrences(of: "\n", with: "\n\t"))
+    }
 }
 
 var command: String = "run title(this is a great title) scripts(1, 2) short"

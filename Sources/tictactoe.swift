@@ -25,7 +25,11 @@ class Board{
     private let Empty: Space = EmptySpace
 
     private let O: Space = OSpace
-    private let X: Space = OSpace
+    private let X: Space = XSpace
+    
+    private let DebugMode = false;
+    
+    private var isGameOver = false;
 
     public let boardSize = 3
 
@@ -71,6 +75,10 @@ class Board{
     public func getMoveRecord() -> [String]{
         return moveRecord
     }
+    
+    public func getIsGameOver() -> Bool{
+        return isGameOver
+    }
 
     public func GetCurrentPlayerSymbol() -> Character{
         if(isXTurn == true){
@@ -80,13 +88,29 @@ class Board{
             return O.symbol
         }
     }
+    
+    private func Debug(_ msg: String){
+        if (DebugMode == true){
+            print("\tBoard/" + msg.replacingOccurrences(of: "\n", with: "\n\t"))
+        }
+    }
 
     public func move(row: Int, column: Int) -> (didMove: Bool, gameOver: Bool){
+        
+        if (isGameOver == true){
+            return (false, true)
+        }
+        
         let targetLocation = RCtoInt(row: row, column: column)
         var didMove: Bool = false
         var gameOver: Bool = false
+        
+        Debug("move: Debug 1.1: targetLocation == \(targetLocation)")
+        
         if(boardList[targetLocation].isEmpty == true){
             var newSpace: Space
+            Debug("move: Debug 1.2: isXTurn == \(isXTurn)")
+            
             if(isXTurn == true){
                 newSpace = X
                 isXTurn = false
@@ -95,14 +119,18 @@ class Board{
                 newSpace = O
                 isXTurn = true
             }
-
+            
+            Debug("move: Debug 1.3: isXTurn == \(isXTurn)")
+            
             boardList[targetLocation] = newSpace
+            assembleBoardString()
 
             didMove = true
         }
 
         // Check for a win
         gameOver = checkForWin()
+        Debug("move: Debug 2: gameOver == \(gameOver)")
             
         if (gameOver == false){
             var boardFull = true;
@@ -118,30 +146,36 @@ class Board{
             }
         }
         
+        isGameOver = gameOver
+        
 
         return (didMove, gameOver)
     }
 
     private func checkForWin() -> Bool {
         // Check rows
-        for i in stride(from: 0, to: 9, by: 3) {
-            if (boardList[i] == boardList[i + 1] && boardList[i + 1] == boardList[i + 2]){
+        for i in stride(from: 0, to: 9, by: boardSize) {
+            if (boardList[i] == boardList[i + 1] && boardList[i + 1] == boardList[i + 2] && boardList[i].isEmpty == false){
+                Debug("checkForWin: Debug 1: rows. i == \(i)")
                 return true
             }
         }
 
         // Check columns
         for i in 0..<3 {
-            if (boardList[i] == boardList[i + (1*boardSize)] && boardList[i + (1*boardSize)] == boardList[i + (2*boardSize)]){
+            if (boardList[i] == boardList[i + (1*boardSize)] && boardList[i + (1*boardSize)] == boardList[i + (2*boardSize)] && boardList[i].isEmpty == false){
+                Debug("checkForWin: Debug 2: cols. i == \(i)")
                 return true
             }
         }
 
         // Check diagonals
-        if boardList[0] == boardList[4] && boardList[4] == boardList[8]{
+        if (boardList[0] == boardList[4] && boardList[4] == boardList[8] && boardList[0].isEmpty == false){
+            Debug("checkForWin: Debug 3: Diag 1.")
             return true
         }
-        if boardList[2] == boardList[4] && boardList[4] == boardList[6]{
+        if (boardList[2] == boardList[4] && boardList[4] == boardList[6] && boardList[2].isEmpty == false){
+            Debug("checkForWin: Debug 4: Diag 2.")
             return true
         }
 

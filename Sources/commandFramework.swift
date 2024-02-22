@@ -14,7 +14,7 @@ protocol Command : CommandInternal{
     var minNumParameters: Int {get}
     var maxNumParameters: Int {get}
     func runCommand(parameters: [String : [String]]) 
-    func run(parameters: [[String : Any]])
+    func run(parameters: [[String : [String]]])
 
     var description:String {get}
 
@@ -40,7 +40,7 @@ extension Command{
         return output
     }
 
-    func run(parameters: [[String : Any]]){
+    func run(parameters: [[String : [String]]]){
         // check the number of parameters is correct.
         guard parameters.count <= maxNumParameters else{
             print("Error: Command \(Name) may only accept up to \(maxNumParameters) parameters. " + 
@@ -56,10 +56,17 @@ extension Command{
         var ParamList: [String:[String]] = [:]
 
         // validate each parameters
-        for parameter: [String : Any] in parameters{
-            // badly formatted input is a programer problem so we throw a fatal error.
-            guard let ParamName = parameter[parameterKey] as? String else{
-                fatalError("Parameters is not in the right format: \(String(describing: dictionaryToString(parameter)))")
+        for parameter: [String : [String]] in parameters{
+            
+            var ParamName: String
+            if (parameter.keys.count == 1) {
+                ParamName = parameter.keys.first!
+            }
+            else{
+                // badly formatted input is a programer problem so we throw a fatal error.
+                let errorMsg = "Parameter dict should only have one entry \(dictionaryToString(parameter)!)"
+                print(errorMsg)
+                fatalError()
             }
 
             // make sure the parameter is registered to the command.
@@ -77,8 +84,8 @@ extension Command{
 
             // if there were values passed in, put them in a list
             if (parameter.keys.contains(valueKey)){
-                guard let valueListTemp: [String] = parameter[valueKey] as? [String] else{
-                    fatalError("Parameters is not in the right format: \(String(describing: dictionaryToString(parameter)))")
+                guard let valueListTemp: [String] = parameter[valueKey] else{
+                    fatalError("Parameters is not in the right format: \(dictionaryToString(parameter)!)")
                 }
 
                 valueList = valueListTemp
